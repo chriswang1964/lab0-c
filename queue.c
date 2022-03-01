@@ -17,11 +17,33 @@
  */
 struct list_head *q_new()
 {
-    return NULL;
+    element_t *new = malloc(1 * sizeof(element_t));
+    if (!new)
+        return NULL;
+    INIT_LIST_HEAD(&new->list);
+    new->value = NULL;
+    return &new->list;
 }
 
 /* Free all storage used by queue */
-void q_free(struct list_head *l) {}
+void q_free(struct list_head *l)
+{
+    element_t *ele;
+    if (!l)
+        return;
+    struct list_head *next = l->next;
+
+    if (next != l)
+        do {
+            ele = list_entry(next, element_t, list);
+            next = ele->list.next;
+            free(ele->value);
+            free(ele);
+        } while (next != l);
+    ele = list_entry(l, element_t, list);
+    free(ele);
+    return;
+}
 
 /*
  * Attempt to insert element at head of queue.
@@ -32,6 +54,21 @@ void q_free(struct list_head *l) {}
  */
 bool q_insert_head(struct list_head *head, char *s)
 {
+    char *buf;
+    unsigned long len = strlen(s);
+    element_t *ele_p;
+
+    if (!head)
+        return false;
+    struct list_head *tmp = q_new();
+    if (!tmp)
+        return false;
+    list_add(tmp, head);
+    buf = (char *) malloc(1 + len);
+    strncpy(buf, s, len);
+    buf[len] = '\0';
+    ele_p = list_entry(tmp, element_t, list);
+    ele_p->value = buf;
     return true;
 }
 
@@ -44,6 +81,21 @@ bool q_insert_head(struct list_head *head, char *s)
  */
 bool q_insert_tail(struct list_head *head, char *s)
 {
+    char *buf;
+    unsigned long len = strlen(s);
+    element_t *ele_p;
+
+    if (!head)
+        return false;
+    struct list_head *tmp = q_new();
+    if (!tmp)
+        return false;
+    list_add_tail(tmp, head);
+    buf = (char *) malloc(1 + len);
+    strncpy(buf, s, len);
+    buf[len] = '\0';
+    ele_p = list_entry(tmp, element_t, list);
+    ele_p->value = buf;
     return true;
 }
 
@@ -63,7 +115,26 @@ bool q_insert_tail(struct list_head *head, char *s)
  */
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
-    return NULL;
+    //    struct list_head *to = q_new();
+    //    if(!to)
+    //        return NULL;
+
+    if (!head)
+        return NULL;
+
+    element_t *ret = list_entry(head->next, element_t, list);
+    struct list_head *targ = head->next;
+    struct list_head *new_first = targ->next;
+
+    //    list_cut_position(to, head, targ);
+    head->next = new_first;
+    if (sp != NULL) {
+        strncpy(sp, ret->value, bufsize - 1);
+        sp[bufsize - 1] = '\0';
+    }
+
+
+    return ret;
 }
 
 /*
